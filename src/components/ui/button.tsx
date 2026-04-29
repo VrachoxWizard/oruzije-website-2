@@ -47,12 +47,19 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    // Separate motion props if necessary, but for asChild we usually want to avoid them
     if (asChild) {
+      // Filter out motion-specific props that Slot/Radix doesn't understand
+      const { 
+        whileHover, whileTap, transition, initial, animate, exit, variants, 
+        ...childProps 
+      } = props as any;
+
       return (
         <Slot
           className={cn(buttonVariants({ variant, size, className }))}
           ref={ref}
-          {...(props as any)}
+          {...childProps}
         />
       );
     }

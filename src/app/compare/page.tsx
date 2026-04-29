@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useComparisonStore } from "@/lib/comparison-store";
 import { Container } from "@/components/layout/container";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
@@ -9,12 +10,13 @@ import { X, ShoppingCart, ShieldAlert } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/lib/cart-store";
 import { toast } from "sonner";
+import { Product } from "@/types/product";
 
 export default function ComparePage() {
   const { items, removeItem, clear } = useComparisonStore();
   const addItem = useCartStore((state) => state.addItem);
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     addItem(product, 1);
     toast.success(`${product.name} dodano u košaricu`);
   };

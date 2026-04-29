@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Heart, Scale } from "lucide-react";
 import { Product } from "@/types/product";
 import { getProductCta } from "@/lib/compliance";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/cart-store";
@@ -14,6 +14,10 @@ import { useComparisonStore } from "@/lib/comparison-store";
 import { toast } from "sonner";
 
 import { Star, Eye } from "lucide-react";
+
+interface ProductCardProps {
+  product: Product;
+}
 
 export function ProductCard({ product }: ProductCardProps) {
   const { label, action } = getProductCta(product.complianceType);

@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Container } from "./container";
-import { Phone, Mail, MapPin, Globe, Share2, ShieldCheck, Truck } from "lucide-react";
+import { Globe, Share2, ShieldCheck, Truck } from "lucide-react";
 
 export function SiteFooter() {
   return (

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Container } from "@/components/layout/container";
 import { ShieldCheck, Truck, MapPin, Award, CheckCircle, Package } from "lucide-react";

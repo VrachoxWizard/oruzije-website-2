@@ -10,10 +10,12 @@ import { products } from "@/data/products";
 import { cn } from "@/lib/utils";
 import { ArrowRight, Sparkles, Box } from "lucide-react";
 
+import { Product } from "@/types/product";
+
 const tabs = [
-  { id: 'novo', label: 'Novo u Ponudi', filter: (p: any) => p.badges?.includes('Novo') || p.id === 'p4' },
-  { id: 'premium', label: 'Premium Oprema', filter: (p: any) => p.price > 500 },
-  { id: 'outdoor', label: 'Odjeća & Obuća', filter: (p: any) => ['odjeca', 'obuca'].includes(p.categorySlug) },
+  { id: 'novo', label: 'Novo u Ponudi', filter: (p: Product) => p.badges?.includes('Novo') || p.id === 'p4' },
+  { id: 'premium', label: 'Premium Oprema', filter: (p: Product) => p.price > 500 },
+  { id: 'outdoor', label: 'Odjeća & Obuća', filter: (p: Product) => ['odjeca', 'obuca'].includes(p.categorySlug) },
 ];
 
 export function FeaturedProductsSection() {

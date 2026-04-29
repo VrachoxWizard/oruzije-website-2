@@ -115,6 +115,11 @@ export function ProductGrid({ initialProducts, title, description, hideFilters =
               <h1 className="text-4xl md:text-5xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)] leading-[0.9]">
                 {title}
               </h1>
+              {description && (
+                <p className="text-sm text-stone-500 font-medium leading-relaxed max-w-2xl mt-2">
+                  {description}
+                </p>
+              )}
             </div>
 
             <div className="hidden md:flex items-center gap-4 bg-white border border-stone-100 p-2 rounded-2xl shadow-sm">

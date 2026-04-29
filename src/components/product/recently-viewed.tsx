@@ -5,20 +5,18 @@ import { useViewHistoryStore } from "@/lib/view-history-store";
 import { products } from "@/data/products";
 import { ProductCard } from "./product-card";
 import { Container } from "../layout/container";
-import { SectionHeader } from "../layout/section-header";
-
 import { History } from "lucide-react";
 
 export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
   const [mounted, setMounted] = useState(false);
   const viewedProductIds = useViewHistoryStore((state) => state.viewedProductIds);
 
-  // Fix hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || viewedProductIds.length <= (excludeId ? 0 : 0)) return null;
+  if (!mounted) return null;
+  if (viewedProductIds.length <= (excludeId ? 0 : 0)) return null;
 
   const viewedProducts = viewedProductIds
     .filter((id) => id !== excludeId)

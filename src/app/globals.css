@@ -100,5 +100,49 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
+
+  .copper-gradient {
+    background: linear-gradient(135deg, var(--color-copper-600) 0%, var(--color-copper-500) 50%, var(--color-copper-400) 100%);
+  }
+
+  .forest-gradient {
+    background: linear-gradient(135deg, var(--color-forest-950) 0%, var(--color-forest-800) 100%);
+  }
+
+  .heading-xl {
+    font-size: clamp(2.5rem, 8vw, 6rem);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+  }
+
+  .heading-lg {
+    font-size: clamp(1.5rem, 5vw, 3.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    font-style: italic;
+    text-transform: uppercase;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-stone-50);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-forest-800);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-copper-500);
 }
 

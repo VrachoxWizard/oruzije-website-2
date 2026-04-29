@@ -25,7 +25,7 @@ const reviews = [
   },
 ];
 
-export function ProductReviews({ productId }: { productId: string }) {
+export function ProductReviews({ productId: _productId }: { productId: string }) {
   return (
     <div className="py-24 bg-white border-y border-stone-200 mt-24 bg-texture">
       <div className="max-w-4xl mx-auto px-6">
@@ -81,7 +81,7 @@ export function ProductReviews({ productId }: { productId: string }) {
               </div>
               
               <p className="text-stone-600 font-medium leading-relaxed mb-8 italic">
-                "{review.comment}"
+                &quot;{review.comment}&quot;
               </p>
 
               <div className="flex flex-wrap gap-3">

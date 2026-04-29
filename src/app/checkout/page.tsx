@@ -1,4 +1,7 @@
-import { CreditCard, Truck, History } from "lucide-react";
+import Link from "next/link";
+import { CreditCard, Truck, History, ArrowLeft, ShoppingBag, ShieldCheck } from "lucide-react";
+import { Container } from "@/components/layout/container";
+import { Button } from "@/components/ui/button";
 
 export default function CheckoutPage() {
   return (

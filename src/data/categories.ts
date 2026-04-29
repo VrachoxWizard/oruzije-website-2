@@ -5,7 +5,7 @@ export const categories: Category[] = [
     id: '1',
     slug: 'oruzje',
     name: 'Oružje',
-    description: 'Dugo i kratko oružje za lov i streljaštvo. Regulirani asortiman.',
+    description: 'Vrhunski izbor karabina, sačmarica i sportskog oružja. Profesionalna rješenja za lov i streljaštvo uz potpunu zakonsku usklađenost.',
     image: '/images/cat-rifles.png',
     isRegulated: true,
     subcategories: [
@@ -20,7 +20,7 @@ export const categories: Category[] = [
     id: '2',
     slug: 'streljivo',
     name: 'Streljivo',
-    description: 'Širok asortiman streljiva za razne kalibre. Regulirani asortiman.',
+    description: 'Beskompromisna preciznost i pouzdanost. Širok raspon kalibara za sve vrste lova i sportskih disciplina.',
     image: '/images/cat-ammo.png',
     isRegulated: true,
     subcategories: [
@@ -35,7 +35,7 @@ export const categories: Category[] = [
     id: '3',
     slug: 'odjeca',
     name: 'Odjeća',
-    description: 'Kvalitetna odjeća za sve vremenske uvjete na terenu.',
+    description: 'Tehnička oprema dizajnirana za ekstremne uvjete. Ostanite zaštićeni i neprimjetni u svakom okruženju.',
     image: '/images/cat-clothing.png',
     isRegulated: false,
     subcategories: [
@@ -49,7 +49,7 @@ export const categories: Category[] = [
     id: '4',
     slug: 'obuca',
     name: 'Obuća',
-    description: 'Izdržljiva obuća za lov, planinarenje i boravak u prirodi.',
+    description: 'Maksimalna stabilnost i udobnost na najzahtjevnijim terenima. Vodootpornost i prozračnost bez kompromisa.',
     image: '/images/cat-boots.png',
     isRegulated: false,
     subcategories: [
@@ -61,7 +61,7 @@ export const categories: Category[] = [
     id: '5',
     slug: 'oprema',
     name: 'Oprema',
-    description: 'Dodatna oprema za lov i outdoor.',
+    description: 'Napredna optika, termovizija i vrhunski noževi. Tehnologija koja čini razliku između uspjeha i promašaja.',
     image: '/images/cat-optics.png',
     isRegulated: false,
     subcategories: [
