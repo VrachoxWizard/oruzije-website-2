@@ -1,0 +1,75 @@
+import { Category } from '@/types/category';
+
+export const categories: Category[] = [
+  {
+    id: '1',
+    slug: 'oruzje',
+    name: 'Oružje',
+    description: 'Dugo i kratko oružje za lov i streljaštvo. Regulirani asortiman.',
+    image: '/images/cat-rifles.png',
+    isRegulated: true,
+    subcategories: [
+      { id: '1-1', slug: 'dugo-oruzje', name: 'Dugo oružje' },
+      { id: '1-2', slug: 'kratko-oruzje', name: 'Kratko oružje' },
+      { id: '1-3', slug: 'zracno-oruzje', name: 'Zračno oružje' },
+      { id: '1-4', slug: 'odrzavanje', name: 'Čišćenje i održavanje' },
+      { id: '1-5', slug: 'futrole-i-navlake', name: 'Futrole i navlake' },
+    ],
+  },
+  {
+    id: '2',
+    slug: 'streljivo',
+    name: 'Streljivo',
+    description: 'Širok asortiman streljiva za razne kalibre. Regulirani asortiman.',
+    image: '/images/cat-ammo.png',
+    isRegulated: true,
+    subcategories: [
+      { id: '2-1', slug: 'sacmeno', name: 'Sačmeno' },
+      { id: '2-2', slug: 'malokalibarsko', name: 'Malokalibarsko' },
+      { id: '2-3', slug: 'karabinsko', name: 'Karabinsko' },
+      { id: '2-4', slug: 'diabole', name: 'Diabole' },
+      { id: '2-5', slug: 'reloading', name: 'Reloading' },
+    ],
+  },
+  {
+    id: '3',
+    slug: 'odjeca',
+    name: 'Odjeća',
+    description: 'Kvalitetna odjeća za sve vremenske uvjete na terenu.',
+    image: '/images/cat-clothing.png',
+    isRegulated: false,
+    subcategories: [
+      { id: '3-1', slug: 'jakne', name: 'Jakne' },
+      { id: '3-2', slug: 'hlace', name: 'Hlače' },
+      { id: '3-3', slug: 'kape', name: 'Kape' },
+      { id: '3-4', slug: 'majice', name: 'Kratke majice' },
+    ],
+  },
+  {
+    id: '4',
+    slug: 'obuca',
+    name: 'Obuća',
+    description: 'Izdržljiva obuća za lov, planinarenje i boravak u prirodi.',
+    image: '/images/cat-boots.png',
+    isRegulated: false,
+    subcategories: [
+      { id: '4-1', slug: 'cizme', name: 'Čizme' },
+      { id: '4-2', slug: 'cipele', name: 'Cipele' },
+    ],
+  },
+  {
+    id: '5',
+    slug: 'oprema',
+    name: 'Oprema',
+    description: 'Dodatna oprema za lov i outdoor.',
+    image: '/images/cat-optics.png',
+    isRegulated: false,
+    subcategories: [
+      { id: '5-1', slug: 'oprema-za-lov', name: 'Oprema za lov' },
+      { id: '5-2', slug: 'optike', name: 'Optike' },
+      { id: '5-3', slug: 'svjetiljke', name: 'Svjetiljke' },
+      { id: '5-4', slug: 'nozevi', name: 'Noževi' },
+      { id: '5-5', slug: 'ruksaci-torbe', name: 'Ruksaci i torbe' },
+    ],
+  },
+];
