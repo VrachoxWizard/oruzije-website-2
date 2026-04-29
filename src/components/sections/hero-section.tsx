@@ -1,104 +1,91 @@
 "use client";
 
-import React, { useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { Award, MapPin, ShieldCheck, Truck } from "lucide-react";
+import { useRef } from "react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Truck, MapPin, Award } from "lucide-react";
+
+const trustChips = [
+  { icon: MapPin, title: "Drniš", desc: "Fizička trgovina" },
+  { icon: Award, title: "Podrška", desc: "Stručan odabir" },
+  { icon: ShieldCheck, title: "Uvjeti", desc: "Provjera reguliranog" },
+  { icon: Truck, title: "Dostava", desc: "150 €+" },
+];
 
 export function HeroSection() {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
-
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [0.6, 0.1]);
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [0.72, 0.2]);
 
   return (
-    <section ref={containerRef} className="relative w-full bg-[var(--color-forest-950)] text-white overflow-hidden py-24 lg:py-40 min-h-[90vh] flex items-center bg-texture">
-      {/* Cinematic Background Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-forest-950)] via-[var(--color-forest-950)]/60 to-transparent z-10" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)] via-transparent to-transparent z-10" />
-      
-      <motion.div 
-        style={{ y, opacity }}
-        className="absolute inset-0 bg-[url('/images/hero-bg.png')] bg-cover bg-center scale-105" 
-      />
+    <section
+      ref={containerRef}
+      className="relative flex min-h-[86vh] items-center overflow-hidden bg-[var(--color-forest-950)] py-20 text-white md:py-28 lg:py-32"
+    >
+      <motion.div style={{ y, opacity }} className="absolute inset-0">
+        <Image src="/images/hero-bg.png" alt="" fill priority sizes="100vw" className="object-cover" />
+      </motion.div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_22%,rgba(198,126,58,0.22),transparent_34%),linear-gradient(90deg,var(--color-forest-950)_0%,rgba(5,13,10,0.88)_45%,rgba(5,13,10,0.36)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[var(--color-stone-50)] to-transparent" />
 
-      <Container className="relative z-20">
-        <div className="max-w-4xl flex flex-col gap-12">
-          <motion.div 
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex flex-col gap-6"
-          >
-            <div className="flex items-center gap-3">
-              <div className="h-px w-12 bg-[var(--color-copper-500)]" />
-              <span className="text-xs font-black uppercase tracking-[0.4em] text-[var(--color-copper-500)]">Elite Hunting Experience</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] uppercase italic">
-              Vrhunska <span className="text-stroke text-transparent">Oprema</span> <br />
-              <span className="text-[var(--color-copper-500)]">Za Prave</span> Profesionalce
+      <Container className="relative z-10">
+        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="max-w-4xl">
+            <h1 className="text-5xl font-black uppercase italic leading-[0.95] tracking-tight md:text-6xl lg:text-7xl 2xl:text-8xl">
+              Profesionalna oprema za lov, streljaštvo i boravak na terenu.
             </h1>
-            <p className="text-lg md:text-xl text-white/60 max-w-2xl leading-relaxed font-medium">
-              Otkrijte selekciju najpouzdanijih brendova za lov, streljaštvo i outdoor. 
-              Pružamo vam podršku baziranu na desetljećima iskustva na terenu.
+            <p className="mt-7 max-w-2xl text-base font-medium leading-relaxed text-white/70 md:text-xl">
+              Od odjeće i obuće do optike, dodatne opreme i reguliranog asortimana — uz stručnu podršku i jasne uvjete
+              kupnje.
             </p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="flex flex-wrap items-center gap-6"
-          >
-            <Link href="/shop">
-              <Button size="lg" className="bg-[var(--color-copper-500)] text-white hover:bg-[var(--color-copper-600)] shadow-2xl shadow-copper-500/20">
-                Istraži Trgovinu
+            <div className="mt-9 flex flex-wrap gap-4">
+              <Button asChild size="lg" className="rounded-2xl bg-[var(--color-copper-500)] hover:bg-[var(--color-copper-600)]">
+                <Link href="/shop">Pregledaj trgovinu</Link>
               </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:border-white">
-                Stručni Savjeti
+              <Button asChild size="lg" variant="outline" className="rounded-2xl border-white/30 text-white hover:bg-white hover:text-[var(--color-forest-950)]">
+                <Link href="/contact">Pitaj za preporuku</Link>
               </Button>
-            </Link>
-          </motion.div>
+            </div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-8 mt-12 pt-12 border-t border-white/5"
-          >
-            {[
-              { icon: MapPin, title: "Lokacija", desc: "Trgovina u Drnišu" },
-              { icon: Award, title: "Kvaliteta", desc: "Premium Brendovi" },
-              { icon: ShieldCheck, title: "Sigurnost", desc: "Provjereni Uvjeti" },
-              { icon: Truck, title: "Dostava", desc: "Besplatno > 150 €" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col gap-2 group cursor-default">
-                <div className="flex items-center gap-3">
-                  <item.icon className="w-5 h-5 text-[var(--color-copper-500)] transition-transform group-hover:scale-110" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{item.title}</span>
-                </div>
-                <p className="text-sm font-bold text-white/80 group-hover:text-white transition-colors">{item.desc}</p>
+          <div className="relative hidden min-h-[520px] lg:block">
+            <div className="absolute right-0 top-0 h-72 w-72 overflow-hidden rounded-[var(--radius-2xl)] border border-white/10 bg-white/5 shadow-2xl">
+              <Image src="/images/prod-jacket.png" alt="Outdoor jakna" fill sizes="288px" className="object-cover" />
+            </div>
+            <div className="absolute bottom-8 left-4 h-80 w-80 overflow-hidden rounded-[var(--radius-2xl)] border border-white/10 bg-white/5 shadow-2xl">
+              <Image src="/images/prod-scope.png" alt="Optika za teren" fill sizes="320px" className="object-cover" />
+            </div>
+            <div className="absolute bottom-0 right-10 max-w-sm rounded-[var(--radius-xl)] border border-white/10 bg-[var(--color-forest-900)]/88 p-6 shadow-2xl backdrop-blur">
+              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-copper-500)]">
+                Odgovorna kupnja
+              </p>
+              <p className="text-sm font-medium leading-relaxed text-white/65">
+                Regulirani proizvodi ne prolaze kroz impulsni checkout. Upit, dokumentacija i preuzimanje vode se jasno
+                i profesionalno.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-14 grid grid-cols-2 gap-4 border-t border-white/10 pt-8 md:grid-cols-4">
+          {trustChips.map((item) => (
+            <div key={item.title} className="flex items-start gap-3">
+              <item.icon className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-copper-500)]" />
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/45">{item.title}</p>
+                <p className="text-sm font-bold text-white/85">{item.desc}</p>
               </div>
-            ))}
-          </motion.div>
+            </div>
+          ))}
         </div>
       </Container>
-
-      {/* Aesthetic Accents */}
-      <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-l from-[var(--color-forest-950)] to-transparent pointer-events-none z-10 hidden xl:block" />
-      <div className="absolute left-1/2 bottom-12 -translate-x-1/2 z-20 hidden lg:flex flex-col items-center gap-4 opacity-30">
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] rotate-180 [writing-mode:vertical-lr]">Scroll</span>
-        <div className="w-px h-12 bg-gradient-to-b from-[var(--color-copper-500)] to-transparent" />
-      </div>
     </section>
   );
 }
-

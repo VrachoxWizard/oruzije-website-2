@@ -1,211 +1,262 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Product } from "@/types/product";
-import { Container } from "@/components/layout/container";
-import { motion, AnimatePresence } from "framer-motion";
-import { ProductInfo } from "@/components/product/product-info";
-import { StickyMobileCTA } from "@/components/product/sticky-mobile-cta";
-import { RecentlyViewed } from "@/components/product/recently-viewed";
-import { ProductReviews } from "@/components/product/product-reviews";
-import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { useCartStore } from "@/lib/cart-store";
-import { useViewHistoryStore } from "@/lib/view-history-store";
+import { ArrowRight, Heart, Scale, Share2 } from "lucide-react";
 import { toast } from "sonner";
-import { getProductCta } from "@/lib/compliance";
-import { categories } from "@/data/categories";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { Container } from "@/components/layout/container";
+import { ProductInfo } from "@/components/product/product-info";
+import { ProductCard } from "@/components/product/product-card";
+import { ProductReviews } from "@/components/product/product-reviews";
+import { RecentlyViewed } from "@/components/product/recently-viewed";
+import { StickyMobileCTA } from "@/components/product/sticky-mobile-cta";
 import { Button } from "@/components/ui/button";
-import { Share2, Scale, Heart, Info, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { categories } from "@/data/categories";
+import { getProductCta } from "@/lib/compliance";
+import { getRelatedProducts } from "@/lib/product-utils";
+import { useCartStore } from "@/lib/cart-store";
+import { useComparisonStore } from "@/lib/comparison-store";
+import { useViewHistoryStore } from "@/lib/view-history-store";
+import type { Product } from "@/types/product";
 
-interface ProductClientProps {
+type ProductClientProps = {
   product: Product;
-}
+};
 
 export function ProductClient({ product }: ProductClientProps) {
   const [activeImage, setActiveImage] = useState(0);
-  const addItem = useCartStore((state) => state.addItem);
+  const addCartItem = useCartStore((state) => state.addItem);
+  const addCompareItem = useComparisonStore((state) => state.addItem);
   const addViewedProduct = useViewHistoryStore((state) => state.addProduct);
+  const cta = getProductCta(product.complianceType);
+  const category = categories.find((item) => item.slug === product.categorySlug);
+  const gallery = useMemo(() => product.gallery?.length ? product.gallery : product.images, [product.gallery, product.images]);
+  const relatedProducts = getRelatedProducts(product, 4);
 
-  React.useEffect(() => {
+  useEffect(() => {
     addViewedProduct(product.id);
-  }, [product.id, addViewedProduct]);
-  
-  const { label, action } = getProductCta(product.complianceType);
-  const category = categories.find(c => c.slug === product.categorySlug);
+  }, [addViewedProduct, product.id]);
 
-  const handleAction = () => {
-    if (action === "add-to-cart") {
-      addItem(product, 1);
+  const handleAction = (quantity: number) => {
+    if (cta.action === "add-to-cart") {
+      addCartItem(product, quantity);
       toast.success(`${product.name} dodano u košaricu`, {
-        description: "Artikl je uspješno dodan u vašu košaricu.",
-        position: "bottom-right",
+        description: `Količina: ${quantity}. Košarica je spremna za pregled.`,
       });
-    } else {
-      toast.info(`Pokrenut zahtjev: ${label}`, {
-        description: "Naš tim će vam se javiti s informacijama o kupnji.",
-      });
+      return;
+    }
+
+    toast.info(cta.label, {
+      description:
+        "Za ovaj proizvod nastavak ide kroz upit, rezervaciju ili provjeru uvjeta kupnje u trgovini. Nema brze online naplate.",
+    });
+  };
+
+  const handleCompare = () => {
+    addCompareItem(product);
+    toast.success("Proizvod je dodan u usporedbu.");
+  };
+
+  const handleShare = async () => {
+    if (typeof navigator === "undefined") return;
+
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Poveznica proizvoda je kopirana.");
+    } catch {
+      toast.info("Poveznicu možete kopirati iz adresne trake preglednika.");
     }
   };
 
-  const nextImage = () => setActiveImage((prev) => (prev + 1) % product.images.length);
-  const prevImage = () => setActiveImage((prev) => (prev - 1 + product.images.length) % product.images.length);
-
   return (
-    <div className="bg-white min-h-screen bg-texture">
-      <Breadcrumbs 
+    <div className="min-h-screen bg-white bg-texture">
+      <Breadcrumbs
         items={[
-          { label: "Shop", href: "/shop" },
-          { label: category?.name || "Kategorija", href: `/categories/${product.categorySlug}` },
-          { label: product.name }
-        ]} 
+          { label: "Trgovina", href: "/shop" },
+          { label: category?.name ?? "Kategorija", href: category ? `/categories/${category.slug}` : "/shop" },
+          { label: product.name },
+        ]}
       />
-      <div className="py-8 lg:py-16">
+
+      <section className="py-10 md:py-16">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 mb-32">
-            {/* Image Gallery */}
-            <div className="flex flex-col gap-6">
-              <div className="relative group aspect-[4/5] bg-stone-50 rounded-[var(--radius-3xl)] overflow-hidden border border-stone-200 shadow-2xl shadow-forest-950/5">
-                <AnimatePresence mode="wait">
-                  <motion.img 
-                    key={activeImage}
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    src={product.images[activeImage]} 
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </AnimatePresence>
-                
-                {/* Overlay Controls */}
-                <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={prevImage} className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md shadow-xl flex items-center justify-center pointer-events-auto hover:bg-[var(--color-copper-500)] hover:text-white transition-all">
-                    <ChevronLeft className="w-6 h-6" />
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] lg:gap-16 xl:gap-20">
+            <div className="space-y-4">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-2xl)] border border-stone-200 bg-stone-100 shadow-2xl shadow-forest-950/5">
+                <Image
+                  src={gallery[activeImage] ?? product.images[0]}
+                  alt={product.name}
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  className="object-cover"
+                />
+                <div className="absolute right-4 top-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--color-forest-950)] shadow-lg backdrop-blur transition-colors hover:text-[var(--color-copper-500)]"
+                    aria-label="Kopiraj poveznicu proizvoda"
+                  >
+                    <Share2 className="h-5 w-5" />
                   </button>
-                  <button onClick={nextImage} className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md shadow-xl flex items-center justify-center pointer-events-auto hover:bg-[var(--color-copper-500)] hover:text-white transition-all">
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-                  {product.images.map((_, i) => (
-                    <div key={i} className={`h-1 transition-all rounded-full ${activeImage === i ? "w-8 bg-[var(--color-copper-500)]" : "w-2 bg-white/50"}`} />
-                  ))}
-                </div>
-
-                <div className="absolute top-6 right-6 flex flex-col gap-3">
-                  <button className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-xl flex items-center justify-center hover:text-[var(--color-danger)] transition-colors">
-                    <Heart className="w-5 h-5" />
-                  </button>
-                  <button className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-xl flex items-center justify-center hover:text-[var(--color-copper-500)] transition-colors">
-                    <Share2 className="w-5 h-5" />
-                  </button>
+                  <Link
+                    href="/wishlist"
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--color-forest-950)] shadow-lg backdrop-blur transition-colors hover:text-[var(--color-copper-500)]"
+                    aria-label="Dodaj na listu želja"
+                  >
+                    <Heart className="h-5 w-5" />
+                  </Link>
                 </div>
               </div>
 
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
-                {product.images.map((img, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => setActiveImage(i)}
-                    className={`relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border-2 transition-all duration-500 ${
-                      activeImage === i ? "border-[var(--color-copper-500)] scale-110 shadow-xl shadow-copper-500/20" : "border-transparent opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    <img src={img} alt={`${product.name} ${i}`} className="w-full h-full object-cover" />
-                  </button>
+              {gallery.length > 1 && (
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {gallery.map((image, index) => (
+                    <button
+                      key={`${image}-${index}`}
+                      type="button"
+                      onClick={() => setActiveImage(index)}
+                      className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 bg-stone-100 transition-all ${
+                        activeImage === index
+                          ? "border-[var(--color-copper-500)] shadow-lg shadow-copper-500/20"
+                          : "border-transparent opacity-65 hover:opacity-100"
+                      }`}
+                      aria-label={`Prikaži sliku ${index + 1}`}
+                    >
+                      <Image src={image} alt="" fill sizes="80px" className="object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <ProductInfo product={product} cta={cta} onAction={handleAction} />
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {[
+              ["Dostava", product.deliveryInfo?.estimate ?? "1-3 radna dana", product.deliveryInfo?.method ?? "Dostava ili preuzimanje"],
+              ["Plaćanje", "Po ponudi / pouzećem", "Online kartična naplata nije aktivna u MVP-u."],
+              ["Povrati", "Prema pravilima trgovine", "Regulirani proizvodi mogu imati posebne uvjete."],
+            ].map(([title, value, note]) => (
+              <div key={title} className="rounded-[var(--radius-lg)] border border-stone-200 bg-stone-50 p-5">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.25em] text-stone-400">{title}</p>
+                <h2 className="mb-1 text-sm font-black uppercase tracking-tight text-[var(--color-forest-950)]">
+                  {value}
+                </h2>
+                <p className="text-xs font-medium leading-relaxed text-stone-500">{note}</p>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <section className="border-y border-stone-200 bg-stone-50/60 py-12">
+        <Container>
+          <Tabs defaultValue="opis" className="rounded-[var(--radius-xl)] border border-stone-200 bg-white p-4 shadow-sm md:p-6">
+            <TabsList className="mb-6 flex flex-wrap gap-2">
+              {["opis", "specifikacije", "dostava", "uvjeti", "recenzije"].map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className="rounded-full border border-stone-200 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-stone-500 data-[state=active]:border-[var(--color-forest-950)] data-[state=active]:bg-[var(--color-forest-950)] data-[state=active]:text-white"
+                >
+                  {tab}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            <TabsContent value="opis" className="max-w-3xl text-sm font-medium leading-relaxed text-stone-600">
+              <p>{product.description}</p>
+            </TabsContent>
+
+            <TabsContent value="specifikacije">
+              <div className="grid gap-4 md:grid-cols-2">
+                {(product.groupedSpecifications?.length
+                  ? product.groupedSpecifications.flatMap((group) =>
+                      Object.entries(group.items).map(([key, value]) => [`${group.title}: ${key}`, value] as const),
+                    )
+                  : Object.entries(product.specs)
+                ).map(([key, value]) => (
+                  <div key={key} className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-stone-400">{key}</p>
+                    <p className="mt-1 text-sm font-black text-[var(--color-forest-950)]">{value}</p>
+                  </div>
                 ))}
               </div>
-            </div>
+            </TabsContent>
 
-            <ProductInfo 
-              product={product} 
-              label={label} 
-              action={action} 
-              onAction={handleAction} 
-            />
+            <TabsContent value="dostava" className="max-w-3xl text-sm font-medium leading-relaxed text-stone-600">
+              <p>
+                {product.deliveryInfo?.note ??
+                  "Standardni artikli šalju se dostavnom službom, a dio asortimana može se dogovoriti za osobno preuzimanje. Dostava iznad 150 € je besplatna za prikladne artikle."}
+              </p>
+            </TabsContent>
+
+            <TabsContent value="uvjeti" className="max-w-3xl text-sm font-medium leading-relaxed text-stone-600">
+              <p>
+                {product.complianceNote ??
+                  "Za standardne artikle dostupna je normalna narudžba. Za regulirane, dobno ograničene ili pickup-only proizvode potrebno je poslati upit ili dogovoriti provjeru u trgovini."}
+              </p>
+            </TabsContent>
+
+            <TabsContent value="recenzije">
+              <ProductReviews productId={product.id} compact />
+            </TabsContent>
+          </Tabs>
+
+          <div className="mt-8 flex flex-col gap-4 rounded-[var(--radius-xl)] bg-[var(--color-forest-950)] p-6 text-white md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.25em] text-[var(--color-copper-500)]">
+                Usporedba
+              </p>
+              <h2 className="text-2xl font-black uppercase italic tracking-tight">Provjerite razlike prije odluke</h2>
+              <p className="mt-2 max-w-2xl text-sm font-medium text-white/55">
+                Usporedite cijenu, dostupnost, uvjete kupnje i specifikacije s drugim artiklima.
+              </p>
+            </div>
+            <Button className="rounded-2xl bg-white text-[var(--color-forest-950)] hover:bg-[var(--color-copper-500)] hover:text-white" onClick={handleCompare}>
+              <Scale className="h-4 w-4" />
+              Dodaj u usporedbu
+            </Button>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 mb-32">
-            <div className="lg:col-span-7">
-              <div className="flex flex-col gap-12">
-                <div>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="h-px w-8 bg-[var(--color-copper-500)]" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-copper-500)]">Opis Proizvoda</span>
-                  </div>
-                  <h2 className="text-3xl font-black text-[var(--color-forest-950)] uppercase italic tracking-tight mb-8">Tehnička <span className="text-[var(--color-copper-500)]">Izvrsnost</span></h2>
-                  <div className="prose prose-stone max-w-none text-stone-600 font-medium leading-relaxed space-y-4">
-                    <p>{product.description}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 bg-stone-50 p-10 rounded-[var(--radius-3xl)] border border-stone-200 shadow-inner">
-                  {Object.entries(product.specs).map(([key, value]) => (
-                    <div key={key} className="flex flex-col gap-1 py-2 border-b border-stone-200/50">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">{key}</span>
-                      <span className="font-bold text-[var(--color-forest-950)] text-sm">{value}</span>
-                    </div>
-                  ))}
-                  <div className="flex flex-col gap-1 py-2 border-b border-stone-200/50">
-                    <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Šifra proizvoda</span>
-                    <span className="font-bold text-[var(--color-forest-950)] text-sm">{product.id.toUpperCase()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-5">
-              <div className="sticky top-32 space-y-8">
-                <div className="bg-[var(--color-forest-950)] rounded-[var(--radius-3xl)] p-12 text-white relative overflow-hidden bg-texture shadow-2xl shadow-forest-950/20">
-                  <div className="absolute top-0 right-0 p-10 opacity-10">
-                    <Info className="w-40 h-40 text-white" />
-                  </div>
-                  
-                  <div className="relative z-10">
-                    <h3 className="text-2xl font-black uppercase italic tracking-tight mb-6 leading-tight">
-                      Trebate <span className="text-[var(--color-copper-500)]">Stručan</span> Savjet?
-                    </h3>
-                    <p className="text-white/50 mb-10 font-medium leading-relaxed text-sm">
-                      Naš tim stručnjaka stoji vam na raspolaganju za sva pitanja o kalibrima, montaži optike ili odabiru prave opreme za vaš sljedeći teren.
-                    </p>
-                    <Link href="/contact">
-                      <Button size="lg" className="w-full bg-white text-[var(--color-forest-950)] hover:bg-[var(--color-stone-100)]">
-                        Kontaktirajte nas
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="bg-stone-50 border border-stone-200 rounded-[var(--radius-3xl)] p-10 flex flex-col gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[var(--color-copper-500)]/10 flex items-center justify-center">
-                      <Scale className="w-6 h-6 text-[var(--color-copper-500)]" />
-                    </div>
-                    <div>
-                      <h4 className="font-black text-sm uppercase tracking-tight">Besplatna Usporedba</h4>
-                      <p className="text-xs text-stone-500 font-medium">Usporedite specifikacije s drugim artiklima</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <ProductReviews productId={product.id} />
         </Container>
-      
-        <StickyMobileCTA 
-          product={product} 
-          label={label} 
-          action={action} 
-          onAction={handleAction} 
-        />
-        <RecentlyViewed excludeId={product.id} />
-      </div>
+      </section>
+
+      {relatedProducts.length > 0 && (
+        <section className="py-16 md:py-20">
+          <Container>
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <div>
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-copper-500)]">
+                  Povezano
+                </p>
+                <h2 className="text-3xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+                  Slični proizvodi
+                </h2>
+              </div>
+              <Button variant="outline" className="hidden rounded-2xl border-stone-200 md:inline-flex" asChild>
+                <Link href="/shop">
+                  Pregledaj katalog
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {relatedProducts.map((item) => (
+                <ProductCard key={item.id} product={item} />
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
+
+      <RecentlyViewed excludeId={product.id} />
+      <StickyMobileCTA product={product} cta={cta} onAction={handleAction} />
     </div>
   );
 }
-

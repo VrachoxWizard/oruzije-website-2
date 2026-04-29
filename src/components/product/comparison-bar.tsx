@@ -1,80 +1,89 @@
 "use client";
 
-import React from "react";
-import { useComparisonStore } from "@/lib/comparison-store";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Scale, ArrowRight, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Scale, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useComparisonStore } from "@/lib/comparison-store";
 
 export function ComparisonBar() {
   const { items, removeItem, clear, isOpen, setIsOpen } = useComparisonStore();
 
-  if (items.length === 0) return null;
+  if (items.length === 0 || !isOpen) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ y: 200 }}
-        animate={{ y: 0 }}
-        exit={{ y: 200 }}
-        className="fixed bottom-0 left-0 right-0 z-[60] p-4 pointer-events-none"
+      <motion.aside
+        initial={{ y: 160, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 160, opacity: 0 }}
+        transition={{ duration: 0.22 }}
+        className="fixed inset-x-0 bottom-0 z-[60] p-3 pointer-events-none md:p-4"
+        aria-label="Traka za usporedbu proizvoda"
       >
-        <div className="max-w-4xl mx-auto bg-[var(--color-forest-950)] text-white rounded-2xl shadow-2xl overflow-hidden border border-white/10 pointer-events-auto">
-          <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-forest-950)] text-white shadow-2xl pointer-events-auto">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 md:px-6">
             <div className="flex items-center gap-2">
-              <Scale className="w-5 h-5 text-[var(--color-copper-500)]" />
-              <span className="font-bold">Usporedba artikala ({items.length}/4)</span>
+              <Scale className="h-5 w-5 text-[var(--color-copper-500)]" />
+              <span className="text-sm font-bold">Usporedba artikala ({items.length}/4)</span>
             </div>
-            <div className="flex items-center gap-4">
-              <button 
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
                 onClick={clear}
-                className="text-xs text-white/50 hover:text-white transition-colors flex items-center gap-1"
+                className="hidden items-center gap-1 text-xs text-white/55 transition-colors hover:text-white sm:flex"
               >
-                <Trash2 className="w-3 h-3" />
-                Očisti sve
+                <Trash2 className="h-3 w-3" />
+                Očisti
               </button>
-              <button 
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg p-1 text-white/55 transition-colors hover:bg-white/10 hover:text-white"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
+                <span className="sr-only">Sakrij traku usporedbe</span>
               </button>
             </div>
           </div>
 
-          <div className="p-6 flex items-center gap-6 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-4 flex-1">
+          <div className="flex items-center gap-4 overflow-x-auto p-4 scrollbar-hide md:p-5">
+            <div className="flex flex-1 gap-3">
               {items.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="relative w-24 h-24 shrink-0 bg-white/5 rounded-xl border border-white/10 group overflow-hidden"
+                <div
+                  key={item.id}
+                  className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5"
                 >
-                  <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                  <button 
+                  <Image src={item.images[0]} alt={item.name} fill sizes="80px" className="object-cover" />
+                  <button
+                    type="button"
                     onClick={() => removeItem(item.id)}
-                    className="absolute top-1 right-1 p-1 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                    className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-[var(--color-danger)]"
                   >
-                    <X className="w-3 h-3 text-white" />
+                    <X className="h-3 w-3" />
+                    <span className="sr-only">Ukloni iz usporedbe</span>
                   </button>
                 </div>
               ))}
               {items.length < 4 && (
-                <div className="w-24 h-24 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center text-white/20">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-center px-2">Dodaj još</span>
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-white/15 text-center text-[9px] font-black uppercase tracking-widest text-white/25">
+                  Dodaj još
                 </div>
               )}
             </div>
 
-            <Link href="/compare" className="shrink-0">
-              <Button className="h-12 px-6 gap-2 bg-[var(--color-copper-500)] hover:bg-[var(--color-copper-600)] border-none">
-                Usporedi specifikacije
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
+            <Button asChild className="h-12 shrink-0 rounded-2xl bg-[var(--color-copper-500)] hover:bg-[var(--color-copper-600)]">
+              <Link href="/compare">
+                Usporedi
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
-      </motion.div>
+      </motion.aside>
     </AnimatePresence>
   );
 }

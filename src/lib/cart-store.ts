@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Product } from '@/types/product';
+import type { Product } from '@/types/product';
+import { canAddToCart } from '@/lib/compliance';
 
 export type CartItem = {
   product: Product;
@@ -24,6 +25,10 @@ export const useCartStore = create<CartState>()(
       items: [],
       isOpen: false,
       addItem: (product, quantity = 1) => {
+        if (!canAddToCart(product)) {
+          return;
+        }
+
         set((state) => {
           const existingItem = state.items.find((item) => item.product.id === product.id);
           if (existingItem) {

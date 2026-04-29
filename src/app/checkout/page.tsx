@@ -1,169 +1,296 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { CreditCard, Truck, History, ArrowLeft, ShoppingBag, ShieldCheck } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, CheckCircle2, ShieldAlert, ShoppingBag, Truck } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { ShippingProgress } from "@/components/cart/shipping-progress";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useCartStore } from "@/lib/cart-store";
+import { canAddToCart } from "@/lib/compliance";
+import { formatPrice } from "@/lib/utils";
+
+const checkoutSchema = z.object({
+  firstName: z.string().min(2, "Unesite ime."),
+  lastName: z.string().min(2, "Unesite prezime."),
+  email: z.string().email("Unesite ispravnu email adresu."),
+  phone: z.string().min(6, "Unesite telefonski broj."),
+  deliveryMethod: z.enum(["delivery", "pickup"]),
+  address: z.string().min(4, "Unesite adresu."),
+  city: z.string().min(2, "Unesite grad."),
+  postalCode: z.string().min(4, "Unesite poštanski broj."),
+  notes: z.string().optional(),
+  consent: z.boolean().refine((value) => value, "Potvrdite uvjete prije slanja."),
+});
+
+type CheckoutValues = z.infer<typeof checkoutSchema>;
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-2 text-xs font-bold text-[var(--color-danger)]">{message}</p>;
+}
 
 export default function CheckoutPage() {
-  return (
-    <div className="py-20 bg-stone-50 min-h-screen bg-texture">
-      <Container>
-        <div className="mb-12">
-          <Link href="/cart" className="group inline-flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full border border-stone-200 flex items-center justify-center group-hover:bg-[var(--color-forest-950)] group-hover:text-white transition-all">
-              <ArrowLeft className="w-4 h-4" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 group-hover:text-[var(--color-forest-950)] transition-colors">Natrag u košaricu</span>
-          </Link>
-        </div>
+  const [submitted, setSubmitted] = useState(false);
+  const { items, getTotals } = useCartStore();
+  const { total, itemCount } = getTotals();
+  const delivery = total >= 150 ? 0 : 5;
+  const grandTotal = total + delivery;
+  const containsRestrictedItem = items.some((item) => !canAddToCart(item.product));
 
-        <div className="flex flex-col gap-4 mb-16">
+  const {
+    control,
+    formState: { errors, isSubmitting },
+    handleSubmit,
+    register,
+  } = useForm<CheckoutValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      deliveryMethod: "delivery",
+      consent: false,
+    },
+  });
+
+  const onSubmit = (values: CheckoutValues) => {
+    setSubmitted(true);
+    toast.success(containsRestrictedItem ? "Upit je pripremljen za ručnu obradu." : "Narudžba je pripremljena za potvrdu.", {
+      description:
+        values.deliveryMethod === "pickup"
+          ? "Odabrano je osobno preuzimanje u trgovini."
+          : "Ovo je MVP tok bez online naplate i bez slanja stvarnog zahtjeva.",
+    });
+  };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-stone-50 bg-texture py-16">
+        <Container>
+          <div className="mx-auto max-w-2xl rounded-[var(--radius-xl)] border border-stone-200 bg-white p-8 text-center shadow-sm md:p-12">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <h1 className="mb-4 text-3xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+              Zahtjev je evidentiran u demo toku
+            </h1>
+            <p className="mb-8 text-sm font-medium leading-relaxed text-stone-500">
+              Nije izvršena online naplata i nije poslan stvarni email. U produkciji bi ovaj korak kreirao narudžbu,
+              rezervaciju ili upit za ručnu provjeru prema vrsti proizvoda.
+            </p>
+            <Button asChild className="rounded-2xl">
+              <Link href="/shop">Natrag u trgovinu</Link>
+            </Button>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-stone-50 bg-texture py-12 md:py-16">
+      <Container>
+        <div className="mb-10">
+          <Link
+            href="/cart"
+            className="mb-8 inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 transition-colors hover:text-[var(--color-forest-950)]"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white">
+              <ArrowLeft className="h-4 w-4" />
+            </span>
+            Natrag u košaricu
+          </Link>
           <div className="flex items-center gap-3">
             <div className="h-px w-8 bg-[var(--color-copper-500)]" />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-copper-500)]">Sigurno Plaćanje</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-copper-500)]">
+              Checkout MVP
+            </span>
           </div>
-          <h1 className="text-5xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">Dovršetak <span className="text-[var(--color-copper-500)]">Narudžbe</span></h1>
+          <h1 className="mt-4 text-3xl font-black uppercase italic leading-none tracking-tight text-[var(--color-forest-950)] sm:text-4xl md:text-5xl">
+            Dovršetak narudžbe
+          </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-8 flex flex-col gap-10">
-            {/* Shipping Info */}
-            <div className="bg-white rounded-[var(--radius-3xl)] border border-stone-200 p-10 shadow-sm shadow-forest-950/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-10 opacity-5">
-                <Truck className="w-32 h-32" />
-              </div>
-              
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-10 h-10 rounded-xl bg-[var(--color-forest-950)] text-white flex items-center justify-center font-black italic">1</div>
-                <h2 className="text-xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">Podaci o dostavi</h2>
-              </div>
-              
-              <form className="grid grid-cols-1 sm:grid-cols-2 gap-8 relative z-10">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Ime</label>
-                  <input type="text" className="w-full bg-stone-50 border border-stone-100 rounded-xl px-5 py-4 text-sm font-bold placeholder:text-stone-300 focus:ring-2 focus:ring-[var(--color-copper-500)]/20 focus:border-[var(--color-copper-500)] outline-none transition-all shadow-inner" placeholder="npr. Ivan" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Prezime</label>
-                  <input type="text" className="w-full bg-stone-50 border border-stone-100 rounded-xl px-5 py-4 text-sm font-bold placeholder:text-stone-300 focus:ring-2 focus:ring-[var(--color-copper-500)]/20 focus:border-[var(--color-copper-500)] outline-none transition-all shadow-inner" placeholder="npr. Horvat" />
-                </div>
-                <div className="space-y-3 sm:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Email Adresa</label>
-                  <input type="email" className="w-full bg-stone-50 border border-stone-100 rounded-xl px-5 py-4 text-sm font-bold placeholder:text-stone-300 focus:ring-2 focus:ring-[var(--color-copper-500)]/20 focus:border-[var(--color-copper-500)] outline-none transition-all shadow-inner" placeholder="ivan.horvat@email.hr" />
-                </div>
-                <div className="space-y-3 sm:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Adresa Stanovanja</label>
-                  <input type="text" className="w-full bg-stone-50 border border-stone-100 rounded-xl px-5 py-4 text-sm font-bold placeholder:text-stone-300 focus:ring-2 focus:ring-[var(--color-copper-500)]/20 focus:border-[var(--color-copper-500)] outline-none transition-all shadow-inner" placeholder="Ulica kralja Zvonimira 12" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Grad</label>
-                  <input type="text" className="w-full bg-stone-50 border border-stone-100 rounded-xl px-5 py-4 text-sm font-bold placeholder:text-stone-300 focus:ring-2 focus:ring-[var(--color-copper-500)]/20 focus:border-[var(--color-copper-500)] outline-none transition-all shadow-inner" placeholder="npr. Drniš" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Poštanski Broj</label>
-                  <input type="text" className="w-full bg-stone-50 border border-stone-100 rounded-xl px-5 py-4 text-sm font-bold placeholder:text-stone-300 focus:ring-2 focus:ring-[var(--color-copper-500)]/20 focus:border-[var(--color-copper-500)] outline-none transition-all shadow-inner" placeholder="22320" />
-                </div>
-              </form>
-            </div>
-
-            {/* Payment Info */}
-            <div className="bg-white rounded-[var(--radius-3xl)] border border-stone-200 p-10 shadow-sm shadow-forest-950/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-10 opacity-5">
-                <CreditCard className="w-32 h-32" />
-              </div>
-
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-10 h-10 rounded-xl bg-[var(--color-forest-950)] text-white flex items-center justify-center font-black italic">2</div>
-                <h2 className="text-xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">Način plaćanja</h2>
-              </div>
-
-              <div className="flex flex-col gap-4 relative z-10">
-                <label className="group flex items-center justify-between p-6 border-2 border-stone-100 rounded-[var(--radius-2xl)] cursor-pointer hover:border-[var(--color-copper-500)]/30 transition-all bg-stone-50/50 hover:bg-white has-[:checked]:border-[var(--color-copper-500)] has-[:checked]:bg-white has-[:checked]:shadow-xl has-[:checked]:shadow-copper-500/5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-5 h-5 rounded-full border-2 border-stone-200 flex items-center justify-center group-hover:border-[var(--color-copper-500)] transition-colors peer-checked:border-[var(--color-copper-500)]">
-                      <input type="radio" name="payment" defaultChecked className="peer opacity-0 absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-copper-500)] opacity-0 peer-checked:opacity-100 transition-opacity" />
-                    </div>
-                    <span className="text-sm font-black uppercase tracking-tight text-[var(--color-forest-950)]">Kreditna Kartica</span>
-                  </div>
-                  <div className="flex gap-2 opacity-30 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all">
-                    <div className="w-8 h-5 bg-stone-200 rounded" />
-                    <div className="w-8 h-5 bg-stone-200 rounded" />
-                  </div>
-                </label>
-
-                <label className="group flex items-center justify-between p-6 border-2 border-stone-100 rounded-[var(--radius-2xl)] cursor-pointer hover:border-[var(--color-copper-500)]/30 transition-all bg-stone-50/50 hover:bg-white has-[:checked]:border-[var(--color-copper-500)] has-[:checked]:bg-white has-[:checked]:shadow-xl has-[:checked]:shadow-copper-500/5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-5 h-5 rounded-full border-2 border-stone-200 flex items-center justify-center group-hover:border-[var(--color-copper-500)] transition-colors">
-                      <input type="radio" name="payment" className="peer opacity-0 absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-copper-500)] opacity-0 peer-checked:opacity-100 transition-opacity" />
-                    </div>
-                    <span className="text-sm font-black uppercase tracking-tight text-[var(--color-forest-950)]">Plaćanje po Ponudi</span>
-                  </div>
-                </label>
-
-                <label className="group flex items-center justify-between p-6 border-2 border-stone-100 rounded-[var(--radius-2xl)] cursor-pointer hover:border-[var(--color-copper-500)]/30 transition-all bg-stone-50/50 hover:bg-white has-[:checked]:border-[var(--color-copper-500)] has-[:checked]:bg-white has-[:checked]:shadow-xl has-[:checked]:shadow-copper-500/5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-5 h-5 rounded-full border-2 border-stone-200 flex items-center justify-center group-hover:border-[var(--color-copper-500)] transition-colors">
-                      <input type="radio" name="payment" className="peer opacity-0 absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-copper-500)] opacity-0 peer-checked:opacity-100 transition-opacity" />
-                    </div>
-                    <span className="text-sm font-black uppercase tracking-tight text-[var(--color-forest-950)]">Plaćanje Pouzećem</span>
-                  </div>
-                </label>
-              </div>
-            </div>
+        {items.length === 0 ? (
+          <div className="rounded-[var(--radius-xl)] border border-stone-200 bg-white p-12 text-center shadow-sm">
+            <ShoppingBag className="mx-auto mb-5 h-10 w-10 text-stone-300" />
+            <h2 className="mb-3 text-2xl font-black uppercase italic text-[var(--color-forest-950)]">Košarica je prazna</h2>
+            <p className="mb-8 text-sm font-medium text-stone-500">Dodajte standardne artikle prije checkouta.</p>
+            <Button asChild className="rounded-2xl">
+              <Link href="/shop">Pregledaj trgovinu</Link>
+            </Button>
           </div>
-
-          <div className="lg:col-span-4">
-            <div className="bg-[var(--color-forest-950)] rounded-[var(--radius-3xl)] p-10 shadow-2xl shadow-forest-950/20 sticky top-24 text-white overflow-hidden bg-texture">
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                <ShoppingBag className="w-24 h-24" />
-              </div>
-
-              <div className="relative z-10 flex flex-col gap-8">
-                <h3 className="text-xl font-black uppercase italic tracking-tight mb-2">Pregled Narudžbe</h3>
-                
-                <div className="flex flex-col gap-4">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-                    <span>Međuzbroj</span>
-                    <span className="text-white">€1,240.00</span>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="space-y-6">
+              <section className="rounded-[var(--radius-xl)] border border-stone-200 bg-white p-6 shadow-sm md:p-8">
+                <div className="mb-6 flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-forest-950)] text-sm font-black text-white">
+                    1
                   </div>
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-                    <span>Dostava</span>
-                    <span className="text-emerald-400">Besplatna</span>
-                  </div>
-                  <div className="h-px bg-white/10 my-2" />
-                  <div className="flex justify-between items-end">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-copper-500)] mb-1">Ukupno za plaćanje</span>
-                    <span className="text-4xl font-black italic tracking-tighter">€1,240.00</span>
-                  </div>
+                  <h2 className="text-xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+                    Kontakt i dostava
+                  </h2>
                 </div>
 
-                <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex gap-4">
-                  <ShieldCheck className="w-6 h-6 text-[var(--color-copper-500)] shrink-0" />
-                  <div className="flex flex-col gap-1">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white">Sigurna Transakcija</h4>
-                    <p className="text-[9px] text-white/40 font-medium leading-relaxed">
-                      Vaša sigurnost je prioritet. Svi podaci su kriptirani. Regulirani proizvodi zahtijevaju ručni pregled dokumentacije.
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Ime</span>
+                    <Input {...register("firstName")} autoComplete="given-name" />
+                    <FieldError message={errors.firstName?.message} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Prezime</span>
+                    <Input {...register("lastName")} autoComplete="family-name" />
+                    <FieldError message={errors.lastName?.message} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Email</span>
+                    <Input type="email" {...register("email")} autoComplete="email" />
+                    <FieldError message={errors.email?.message} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Telefon</span>
+                    <Input {...register("phone")} autoComplete="tel" />
+                    <FieldError message={errors.phone?.message} />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Način isporuke</span>
+                    <Select {...register("deliveryMethod")}>
+                      <option value="delivery">Dostava za standardne artikle</option>
+                      <option value="pickup">Osobno preuzimanje u trgovini</option>
+                    </Select>
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Adresa</span>
+                    <Input {...register("address")} autoComplete="street-address" />
+                    <FieldError message={errors.address?.message} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Grad</span>
+                    <Input {...register("city")} autoComplete="address-level2" />
+                    <FieldError message={errors.city?.message} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Poštanski broj</span>
+                    <Input {...register("postalCode")} autoComplete="postal-code" />
+                    <FieldError message={errors.postalCode?.message} />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">Napomena</span>
+                    <Textarea {...register("notes")} placeholder="Namjena, željeni termin preuzimanja ili dodatne informacije..." />
+                  </label>
+                </div>
+              </section>
+
+              <section className="rounded-[var(--radius-xl)] border border-stone-200 bg-white p-6 shadow-sm md:p-8">
+                <div className="mb-6 flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-forest-950)] text-sm font-black text-white">
+                    2
+                  </div>
+                  <h2 className="text-xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+                    Uvjeti i obrada
+                  </h2>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--color-copper-500)]/20 bg-[var(--color-copper-500)]/10 p-5">
+                  <div className="flex gap-4">
+                    <ShieldAlert className="h-6 w-6 shrink-0 text-[var(--color-copper-600)]" />
+                    <p className="text-sm font-medium leading-relaxed text-stone-700">
+                      Nema online kartične naplate u ovom MVP-u. Slanje forme predstavlja zahtjev za potvrdu narudžbe,
+                      rezervaciju ili ručnu provjeru, ovisno o asortimanu i uvjetima kupnje.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4 mt-4">
-                  <Button size="lg" className="h-16 rounded-2xl bg-[var(--color-copper-500)] hover:bg-[var(--color-copper-600)] text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-copper-500/20 border-none transition-all active:scale-[0.98]">
-                    Dovrši Narudžbu
-                  </Button>
-                  <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.1em] text-center leading-relaxed">
-                    Potvrdom narudžbe prihvaćate naše <br />
-                    <Link href="/terms" className="text-white/40 hover:text-[var(--color-copper-500)] transition-colors underline decoration-dotted">Uvjete</Link> i <Link href="/privacy" className="text-white/40 hover:text-[var(--color-copper-500)] transition-colors underline decoration-dotted">Pravila Privatnosti</Link>
-                  </p>
-                </div>
-              </div>
+                <Controller
+                  control={control}
+                  name="consent"
+                  render={({ field }) => (
+                    <div className="mt-6">
+                      <label className="flex items-start gap-3">
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => field.onChange(checked === true)}
+                          aria-describedby="consent-error"
+                        />
+                        <span className="text-sm font-medium leading-relaxed text-stone-600">
+                          Razumijem da je ovo zahtjev za ručnu potvrdu i da regulirani proizvodi mogu zahtijevati
+                          dokumentaciju, dobnu provjeru ili osobno preuzimanje.
+                        </span>
+                      </label>
+                      <div id="consent-error">
+                        <FieldError message={errors.consent?.message} />
+                      </div>
+                    </div>
+                  )}
+                />
+              </section>
             </div>
-          </div>
-        </div>
+
+            <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+              <ShippingProgress total={total} />
+              <div className="rounded-[var(--radius-xl)] bg-[var(--color-forest-950)] p-6 text-white shadow-2xl shadow-forest-950/15">
+                <div className="mb-6 flex items-center gap-3">
+                  <Truck className="h-5 w-5 text-[var(--color-copper-500)]" />
+                  <h2 className="text-xl font-black uppercase italic tracking-tight">Pregled narudžbe</h2>
+                </div>
+
+                <div className="mb-6 space-y-4">
+                  {items.map((item) => (
+                    <div key={item.product.id} className="flex gap-3">
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-white/10">
+                        <Image src={item.product.images[0]} alt="" fill sizes="56px" className="object-cover" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-xs font-bold text-white">{item.product.name}</p>
+                        <p className="text-[10px] font-black text-white/40">
+                          {item.quantity} x {formatPrice(item.product.price)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3 border-t border-white/10 pt-5 text-xs font-black uppercase tracking-widest text-white/45">
+                  <div className="flex justify-between">
+                    <span>Artikli ({itemCount})</span>
+                    <span className="text-white">{formatPrice(total)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Dostava</span>
+                    <span className={delivery === 0 ? "text-emerald-400" : "text-white"}>
+                      {delivery === 0 ? "Besplatna" : formatPrice(delivery)}
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between border-t border-white/10 pt-4">
+                    <span className="text-[var(--color-copper-500)]">Ukupno</span>
+                    <span className="text-3xl font-black italic tracking-tight text-white">{formatPrice(grandTotal)}</span>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="mt-6 h-14 w-full rounded-2xl bg-[var(--color-copper-500)] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[var(--color-copper-600)]"
+                >
+                  {containsRestrictedItem ? "Pošalji upit" : "Pošalji narudžbu"}
+                </Button>
+                <p className="mt-4 text-center text-[9px] font-black uppercase tracking-widest text-white/25">
+                  Bez online naplate u demo verziji
+                </p>
+              </div>
+            </aside>
+          </form>
+        )}
       </Container>
     </div>
   );
 }
-

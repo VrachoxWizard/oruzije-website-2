@@ -1,27 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Product } from "@/types/product";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import type { ComplianceCta } from "@/lib/compliance";
 import { formatPrice } from "@/lib/utils";
+import type { Product } from "@/types/product";
 
-interface StickyMobileCTAProps {
+type StickyMobileCTAProps = {
   product: Product;
-  label: string;
-  action: string;
-  onAction: () => void;
-}
+  cta: ComplianceCta;
+  onAction: (quantity: number) => void;
+};
 
-export function StickyMobileCTA({ product, label, action, onAction }: StickyMobileCTAProps) {
+export function StickyMobileCTA({ product, cta, onAction }: StickyMobileCTAProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 800);
-    };
+    const handleScroll = () => setIsVisible(window.scrollY > 760);
 
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -29,30 +28,27 @@ export function StickyMobileCTA({ product, label, action, onAction }: StickyMobi
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ y: 120 }}
-          animate={{ y: 0 }}
-          exit={{ y: 120 }}
-          transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="fixed bottom-6 inset-x-4 z-50 p-4 bg-[var(--color-forest-950)]/90 backdrop-blur-xl border border-white/10 md:hidden rounded-[var(--radius-3xl)] shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-texture"
+          initial={{ y: 120, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 120, opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          className="fixed inset-x-3 bottom-3 z-50 rounded-[var(--radius-xl)] border border-white/10 bg-[var(--color-forest-950)]/95 p-3 text-white shadow-2xl backdrop-blur md:hidden"
         >
-          <div className="flex items-center gap-4 max-w-lg mx-auto">
-            <div className="flex-1 min-w-0">
-              <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] truncate mb-0.5">
-                {product.brand}
-              </h4>
-              <p className="text-sm font-black text-white italic uppercase tracking-tight truncate">
-                {product.name}
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[9px] font-black uppercase tracking-[0.2em] text-white/40">
+                {product.brand ?? "PointerShop"}
               </p>
-              <p className="text-xs font-bold text-[var(--color-copper-500)]">
-                {formatPrice(product.price)}
-              </p>
+              <p className="truncate text-sm font-black uppercase italic tracking-tight">{product.name}</p>
+              <p className="text-xs font-bold text-[var(--color-copper-500)]">{formatPrice(product.price)}</p>
             </div>
-            <Button 
-              size="sm" 
-              className="h-12 px-6 rounded-2xl bg-[var(--color-copper-500)] hover:bg-[var(--color-copper-600)] text-white text-[10px] font-black uppercase tracking-[0.1em] border-none"
-              onClick={onAction}
+            <Button
+              size="sm"
+              variant={cta.action === "add-to-cart" ? "accent" : "regulated"}
+              className="h-11 rounded-2xl px-4 text-[9px] font-black uppercase tracking-widest"
+              onClick={() => onAction(1)}
             >
-              {label}
+              {cta.label}
             </Button>
           </div>
         </motion.div>
@@ -60,4 +56,3 @@ export function StickyMobileCTA({ product, label, action, onAction }: StickyMobi
     </AnimatePresence>
   );
 }
-

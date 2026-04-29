@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Product } from '@/types/product';
+import type { Product } from '@/types/product';
 
 interface ComparisonState {
   items: Product[];

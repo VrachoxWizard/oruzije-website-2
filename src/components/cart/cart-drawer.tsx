@@ -1,156 +1,186 @@
 "use client";
 
-import React from "react";
+import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { X, Minus, Plus, ShoppingBag } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { ShippingProgress } from "@/components/cart/shipping-progress";
+import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-
-import { motion, AnimatePresence } from "framer-motion";
-import { Trash2 } from "lucide-react";
 
 export function CartDrawer() {
   const { isOpen, setIsOpen, items, updateQuantity, removeItem, getTotals } = useCartStore();
   const { total, itemCount } = getTotals();
 
-  // Close drawer when pressing Escape
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setIsOpen]);
+  }, [isOpen, setIsOpen]);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.button
+            type="button"
+            aria-label="Zatvori košaricu"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[var(--color-forest-950)]/60 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 z-[100] bg-[var(--color-forest-950)]/60 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
-          <motion.div 
+          <motion.aside
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 z-[101] w-full max-w-md bg-white shadow-[-20px_0_50px_rgba(0,0,0,0.1)] flex flex-col bg-texture"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Košarica"
+            className="fixed inset-y-0 right-0 z-[101] flex w-full max-w-md flex-col bg-white shadow-2xl bg-texture"
           >
-            <div className="flex items-center justify-between p-8 border-b border-stone-100">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-copper-500)]">Vaša Narudžba</span>
-                <h2 className="text-2xl font-black text-[var(--color-forest-950)] uppercase italic tracking-tight flex items-center gap-3">
+            <div className="flex items-center justify-between border-b border-stone-100 p-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-copper-500)]">
+                  Vaša narudžba
+                </p>
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
                   Košarica <span className="text-[var(--color-copper-500)]">({itemCount})</span>
                 </h2>
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-stone-100 rounded-full transition-all text-stone-400 hover:text-[var(--color-forest-950)] hover:rotate-90"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-[var(--color-forest-950)]"
               >
-                <X className="w-6 h-6" />
+                <X className="h-5 w-5" />
+                <span className="sr-only">Zatvori košaricu</span>
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-6">
+            <div className="flex-1 overflow-y-auto p-6">
               {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center gap-8 py-20">
-                  <div className="w-24 h-24 rounded-full bg-stone-50 flex items-center justify-center border border-stone-100 shadow-inner">
-                    <ShoppingBag className="w-10 h-10 text-stone-200" />
+                <div className="flex h-full flex-col items-center justify-center gap-7 text-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full border border-stone-100 bg-stone-50">
+                    <ShoppingBag className="h-9 w-9 text-stone-300" />
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm font-black uppercase tracking-widest text-stone-400">Vaša košarica je trenutno prazna</p>
-                    <p className="text-xs text-stone-300 font-medium">Istražite našu kolekciju i pronađite savršenu opremu.</p>
+                  <div>
+                    <h3 className="mb-2 text-lg font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+                      Košarica je prazna
+                    </h3>
+                    <p className="max-w-xs text-sm font-medium leading-relaxed text-stone-500">
+                      Standardne artikle možete dodati u košaricu. Regulirani proizvodi vode se kroz upit ili rezervaciju.
+                    </p>
                   </div>
-                  <Button onClick={() => setIsOpen(false)} variant="outline" className="rounded-2xl px-8 h-12 text-[10px] font-black uppercase tracking-widest">
-                    Počni kupovinu
+                  <Button asChild variant="outline" className="rounded-2xl border-stone-200" onClick={() => setIsOpen(false)}>
+                    <Link href="/shop">Pregledaj trgovinu</Link>
                   </Button>
                 </div>
               ) : (
-                <div className="flex flex-col gap-4">
+                <div className="space-y-4">
                   {items.map((item) => (
-                    <motion.div 
-                      key={item.product.id} 
-                      layout
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex gap-6 p-4 bg-stone-50/50 rounded-[var(--radius-2xl)] border border-stone-100 group transition-all hover:bg-white hover:shadow-xl hover:shadow-forest-950/5"
+                    <div
+                      key={item.product.id}
+                      className="flex gap-4 rounded-[var(--radius-lg)] border border-stone-100 bg-stone-50 p-4"
                     >
-                      <div className="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0 border border-stone-100 shadow-sm group-hover:scale-105 transition-transform p-1">
-                        <img 
-                          src={item.product.images[0]} 
-                          alt={item.product.name} 
-                          className="w-full h-full object-cover rounded-lg"
+                      <Link
+                        href={`/products/${item.product.slug}`}
+                        onClick={() => setIsOpen(false)}
+                        className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-white"
+                      >
+                        <Image
+                          src={item.product.images[0]}
+                          alt={item.product.name}
+                          fill
+                          sizes="96px"
+                          className="object-cover"
                         />
-                      </div>
-                      <div className="flex-1 flex flex-col justify-between py-1">
-                        <div className="flex flex-col gap-1">
-                          <h3 className="text-xs font-black text-[var(--color-forest-950)] uppercase tracking-tight line-clamp-2 leading-snug">
-                            {item.product.name}
-                          </h3>
-                          <p className="text-[10px] font-black text-[var(--color-copper-500)]">{formatPrice(item.product.price)}</p>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 bg-white border border-stone-200 rounded-xl px-3 py-1.5 shadow-sm">
-                            <button 
+                      </Link>
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/products/${item.product.slug}`}
+                          onClick={() => setIsOpen(false)}
+                          className="line-clamp-2 text-xs font-black uppercase tracking-tight text-[var(--color-forest-950)] transition-colors hover:text-[var(--color-copper-500)]"
+                        >
+                          {item.product.name}
+                        </Link>
+                        <p className="mt-1 text-[10px] font-black text-[var(--color-copper-500)]">
+                          {formatPrice(item.product.price)}
+                        </p>
+
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <div className="flex items-center rounded-xl border border-stone-200 bg-white">
+                            <button
+                              type="button"
                               onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              className="text-stone-300 hover:text-[var(--color-forest-950)] transition-colors"
                               disabled={item.quantity <= 1}
+                              className="flex h-8 w-8 items-center justify-center text-stone-400 transition-colors hover:text-[var(--color-forest-950)] disabled:opacity-30"
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="h-3 w-3" />
                             </button>
-                            <span className="text-[10px] font-black w-4 text-center">{item.quantity}</span>
-                            <button 
+                            <span className="w-7 text-center text-[10px] font-black">{item.quantity}</span>
+                            <button
+                              type="button"
                               onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              className="text-stone-300 hover:text-[var(--color-forest-950)] transition-colors"
+                              className="flex h-8 w-8 items-center justify-center text-stone-400 transition-colors hover:text-[var(--color-forest-950)]"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="h-3 w-3" />
                             </button>
                           </div>
-                          <button 
+                          <button
+                            type="button"
                             onClick={() => removeItem(item.product.id)}
-                            className="w-8 h-8 flex items-center justify-center text-stone-300 hover:text-[var(--color-danger)] transition-all hover:bg-red-50 rounded-lg"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-red-50 hover:text-[var(--color-danger)]"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Ukloni proizvod</span>
                           </button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
 
             {items.length > 0 && (
-              <div className="p-8 border-t border-stone-100 bg-stone-50/50 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-8">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">Ukupni Iznos:</span>
-                  <span className="text-3xl font-black text-[var(--color-forest-950)] tracking-tighter italic">{formatPrice(total)}</span>
+              <div className="border-t border-stone-100 bg-stone-50 p-6">
+                <ShippingProgress total={total} />
+                <div className="my-5 flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">Međuzbroj</span>
+                  <span className="text-3xl font-black italic tracking-tight text-[var(--color-forest-950)]">
+                    {formatPrice(total)}
+                  </span>
                 </div>
-                <div className="flex flex-col gap-3">
-                  <Link href="/checkout" onClick={() => setIsOpen(false)} className="w-full">
-                    <Button className="w-full h-16 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-forest-950/20 rounded-2xl">
-                      Završi kupovinu
-                    </Button>
-                  </Link>
-                  <Link href="/cart" onClick={() => setIsOpen(false)} className="w-full">
-                    <Button variant="outline" className="w-full h-14 text-[9px] font-black uppercase tracking-[0.2em] border-stone-200 rounded-2xl">
+                <p className="mb-4 text-xs font-medium leading-relaxed text-stone-500">
+                  Košarica prima samo standardne artikle. Regulirani proizvodi koriste upit ili rezervaciju prije kupnje.
+                </p>
+                <div className="grid gap-3">
+                  <Button asChild className="h-14 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em]">
+                    <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                      Nastavi na checkout
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="h-12 rounded-2xl border-stone-200 text-[9px] font-black uppercase tracking-widest">
+                    <Link href="/cart" onClick={() => setIsOpen(false)}>
                       Pregledaj košaricu
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
-                <p className="text-center text-[9px] font-black uppercase tracking-widest text-stone-300 mt-6">Besplatna dostava uključena</p>
               </div>
             )}
-          </motion.div>
+          </motion.aside>
         </>
       )}
     </AnimatePresence>
   );
 }
-

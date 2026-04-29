@@ -1,148 +1,225 @@
 "use client";
 
-import React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { useComparisonStore } from "@/lib/comparison-store";
-import { Container } from "@/components/layout/container";
-import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { Button } from "@/components/ui/button";
-import { X, ShoppingCart, ShieldAlert } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
-import { useCartStore } from "@/lib/cart-store";
+import { ShieldAlert, ShoppingCart, X } from "lucide-react";
 import { toast } from "sonner";
-import { Product } from "@/types/product";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { Container } from "@/components/layout/container";
+import { Button } from "@/components/ui/button";
+import { useCartStore } from "@/lib/cart-store";
+import { canAddToCart, getComplianceCta, getComplianceMessage } from "@/lib/compliance";
+import { useComparisonStore } from "@/lib/comparison-store";
+import { formatPrice, getStockLabel } from "@/lib/utils";
+import type { Product } from "@/types/product";
+
+function handleProductAction(product: Product, addItem: (product: Product, quantity?: number) => void) {
+  if (canAddToCart(product)) {
+    addItem(product, 1);
+    toast.success(`${product.name} dodano u košaricu.`);
+    return;
+  }
+
+  toast.info(getComplianceCta(product.complianceType).label, {
+    description: "Ovaj proizvod koristi upit, rezervaciju ili ručnu provjeru uvjeta kupnje.",
+  });
+}
 
 export default function ComparePage() {
   const { items, removeItem, clear } = useComparisonStore();
   const addItem = useCartStore((state) => state.addItem);
-
-  const handleAddToCart = (product: Product) => {
-    addItem(product, 1);
-    toast.success(`${product.name} dodano u košaricu`);
-  };
-
-  const allSpecs = Array.from(new Set(items.flatMap(item => Object.keys(item.specs))));
+  const allSpecs = Array.from(new Set(items.flatMap((item) => Object.keys(item.specs))));
 
   return (
-    <div className="bg-stone-50 min-h-screen pb-24 bg-texture">
+    <div className="min-h-screen bg-stone-50 bg-texture pb-20">
       <Breadcrumbs items={[{ label: "Usporedba" }]} />
-      
+
       <Container>
-        <div className="py-20 flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-px w-8 bg-[var(--color-copper-500)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-copper-500)]">Tehnička Analiza</span>
+        <div className="py-12 md:py-16">
+          <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="h-px w-8 bg-[var(--color-copper-500)]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-copper-500)]">
+                  Tehnička analiza
+                </span>
+              </div>
+              <h1 className="text-4xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)] md:text-5xl">
+                Usporedba opreme
+              </h1>
             </div>
-            <h1 className="text-5xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
-              Usporedba <span className="text-[var(--color-copper-500)]">Opreme</span>
-            </h1>
+            {items.length > 0 && (
+              <Button variant="outline" onClick={clear} className="rounded-2xl border-stone-200">
+                <X className="h-4 w-4" />
+                Očisti sve
+              </Button>
+            )}
           </div>
-          {items.length > 0 && (
-            <Button variant="outline" onClick={clear} className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all gap-2">
-              <X className="w-4 h-4" />
-              Očisti Sve
-            </Button>
+
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center gap-6 rounded-[var(--radius-xl)] border border-stone-200 bg-white p-12 text-center shadow-sm md:p-20">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border border-stone-100 bg-stone-50">
+                <X className="h-8 w-8 text-stone-300" />
+              </div>
+              <div>
+                <h2 className="mb-3 text-2xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+                  Nema proizvoda za usporedbu
+                </h2>
+                <p className="mx-auto max-w-sm text-sm font-medium leading-relaxed text-stone-500">
+                  Dodajte do četiri proizvoda iz kataloga kako biste usporedili cijene, uvjete kupnje i specifikacije.
+                </p>
+              </div>
+              <Button asChild className="rounded-2xl">
+                <Link href="/shop">Vrati se u trgovinu</Link>
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-5 lg:hidden">
+                {items.map((item) => {
+                  const cta = getComplianceCta(item.complianceType);
+
+                  return (
+                    <article key={item.id} className="rounded-[var(--radius-xl)] border border-stone-200 bg-white p-5 shadow-sm">
+                      <div className="flex gap-4">
+                        <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
+                          <Image src={item.images[0]} alt={item.name} fill sizes="96px" className="object-cover" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item.id)}
+                            className="float-right flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-red-50 hover:text-[var(--color-danger)]"
+                          >
+                            <X className="h-4 w-4" />
+                            <span className="sr-only">Ukloni iz usporedbe</span>
+                          </button>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-copper-500)]">
+                            {item.brand}
+                          </p>
+                          <h2 className="mt-1 text-sm font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+                            {item.name}
+                          </h2>
+                          <p className="mt-2 text-xl font-black italic tracking-tight">{formatPrice(item.price)}</p>
+                        </div>
+                      </div>
+                      <div className="mt-5 grid gap-2 text-xs">
+                        <p>
+                          <strong>Zaliha:</strong> {getStockLabel(item.stockStatus)}
+                        </p>
+                        <p>
+                          <strong>Uvjeti:</strong> {getComplianceMessage(item)}
+                        </p>
+                      </div>
+                      <Button
+                        className="mt-5 w-full rounded-2xl text-[10px] font-black uppercase tracking-widest"
+                        variant={canAddToCart(item) ? "default" : "regulated"}
+                        onClick={() => handleProductAction(item, addItem)}
+                      >
+                        {canAddToCart(item) && <ShoppingCart className="h-4 w-4" />}
+                        {cta.label}
+                      </Button>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-stone-200 bg-white shadow-sm lg:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-stone-50">
+                        <th className="w-56 border-b border-r border-stone-200 p-6 text-left text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">
+                          Stavka
+                        </th>
+                        {items.map((item) => {
+                          const cta = getComplianceCta(item.complianceType);
+
+                          return (
+                            <th key={item.id} className="min-w-72 border-b border-r border-stone-200 p-6 text-left last:border-r-0">
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => removeItem(item.id)}
+                                  className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-red-50 hover:text-[var(--color-danger)]"
+                                >
+                                  <X className="h-4 w-4" />
+                                  <span className="sr-only">Ukloni iz usporedbe</span>
+                                </button>
+                                <div className="relative mb-5 aspect-[4/5] overflow-hidden rounded-2xl bg-stone-100">
+                                  <Image src={item.images[0]} alt={item.name} fill sizes="288px" className="object-cover" />
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-copper-500)]">
+                                  {item.brand}
+                                </p>
+                                <h2 className="mt-1 line-clamp-2 text-sm font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">
+                                  {item.name}
+                                </h2>
+                                <p className="mt-3 text-2xl font-black italic tracking-tight text-[var(--color-forest-950)]">
+                                  {formatPrice(item.price)}
+                                </p>
+                                <Button
+                                  className="mt-5 w-full rounded-2xl text-[9px] font-black uppercase tracking-widest"
+                                  variant={canAddToCart(item) ? "default" : "regulated"}
+                                  onClick={() => handleProductAction(item, addItem)}
+                                >
+                                  {canAddToCart(item) && <ShoppingCart className="h-4 w-4" />}
+                                  {cta.label}
+                                </Button>
+                              </div>
+                            </th>
+                          );
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border-b border-r border-stone-200 p-6 text-[10px] font-black uppercase tracking-widest text-[var(--color-forest-950)]">
+                          Dostupnost
+                        </td>
+                        {items.map((item) => (
+                          <td key={item.id} className="border-b border-r border-stone-200 p-6 text-sm font-bold text-stone-600 last:border-r-0">
+                            {getStockLabel(item.stockStatus)}
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="border-b border-r border-stone-200 p-6 text-[10px] font-black uppercase tracking-widest text-[var(--color-forest-950)]">
+                          Uvjeti kupnje
+                        </td>
+                        {items.map((item) => (
+                          <td key={item.id} className="border-b border-r border-stone-200 p-6 last:border-r-0">
+                            {item.complianceType !== "standard" ? (
+                              <div className="flex gap-2 text-amber-700">
+                                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                                <span className="text-xs font-bold leading-relaxed">{getComplianceMessage(item)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-xs font-bold text-stone-500">Standardna online narudžba.</span>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                      {allSpecs.map((spec) => (
+                        <tr key={spec} className="even:bg-stone-50/45">
+                          <td className="border-b border-r border-stone-200 p-6 text-[10px] font-black uppercase tracking-widest text-[var(--color-forest-950)]">
+                            {spec}
+                          </td>
+                          {items.map((item) => (
+                            <td key={item.id} className="border-b border-r border-stone-200 p-6 text-sm font-medium text-stone-600 last:border-r-0">
+                              {item.specs[spec] ?? "-"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
-
-        {items.length === 0 ? (
-          <div className="py-32 text-center bg-white rounded-[var(--radius-3xl)] border border-stone-200 shadow-sm flex flex-col items-center gap-8">
-            <div className="w-20 h-20 rounded-full bg-stone-50 flex items-center justify-center border border-stone-100 shadow-inner">
-              <X className="w-8 h-8 text-stone-200" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)]">Nema proizvoda za usporedbu</h2>
-              <p className="text-stone-400 font-medium max-w-xs mx-auto text-sm">Dodajte proizvode iz kataloga kako biste ih usporedili jedan uz drugog.</p>
-            </div>
-            <Link href="/shop">
-              <Button className="rounded-2xl px-10 h-14 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-forest-950/20">Vrati se u trgovinu</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-white rounded-[var(--radius-3xl)] border border-stone-200 shadow-xl shadow-forest-950/5 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-stone-50/50">
-                    <th className="w-64 p-8 text-left border-b border-stone-100 border-r border-stone-100">
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-300">Specifikacije</span>
-                    </th>
-                    {items.map((item) => (
-                      <th key={item.id} className="p-8 border-b border-stone-100 min-w-[320px] text-left group border-r border-stone-100 last:border-r-0">
-                        <div className="flex flex-col gap-6 relative">
-                          <button 
-                            onClick={() => removeItem(item.id)}
-                            className="absolute -top-2 -right-2 w-8 h-8 flex items-center justify-center bg-white text-stone-300 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:text-red-500 hover:scale-110 z-10 border border-stone-100"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                          
-                          <div className="aspect-[4/5] rounded-[var(--radius-2xl)] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-500">
-                            <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                          </div>
-                          
-                          <div className="flex flex-col gap-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-copper-500)]">{item.brand}</span>
-                            <h3 className="text-sm font-black text-[var(--color-forest-950)] uppercase italic tracking-tight leading-tight h-10 line-clamp-2">{item.name}</h3>
-                            <div className="text-xl font-black italic tracking-tighter text-[var(--color-forest-950)] mt-2">{formatPrice(item.price)}</div>
-                          </div>
-
-                          <Button 
-                            className="w-full h-12 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-forest-950/10" 
-                            onClick={() => handleAddToCart(item)}
-                            variant={item.complianceType === "standard" ? "default" : "regulated"}
-                          >
-                            {item.complianceType === "standard" ? (
-                              <><ShoppingCart className="w-3.5 h-3.5 mr-2" /> Dodaj u košaricu</>
-                            ) : (
-                              "Pošalji Upit"
-                            )}
-                          </Button>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="bg-stone-50/20">
-                    <td className="p-8 font-black text-[var(--color-forest-950)] uppercase tracking-widest text-[10px] border-b border-stone-100 border-r border-stone-100">Brend</td>
-                    {items.map(item => (
-                      <td key={item.id} className="p-8 text-xs font-black uppercase tracking-widest text-[var(--color-forest-950)] border-b border-stone-100 border-r border-stone-100 last:border-r-0">{item.brand}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="p-8 font-black text-[var(--color-forest-950)] uppercase tracking-widest text-[10px] border-b border-stone-100 border-r border-stone-100">Regulacija</td>
-                    {items.map(item => (
-                      <td key={item.id} className="p-8 border-b border-stone-100 border-r border-stone-100 last:border-r-0">
-                        {item.complianceType !== "standard" ? (
-                          <div className="flex items-center gap-2 text-amber-600">
-                            <ShieldAlert className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Regulirano</span>
-                          </div>
-                        ) : (
-                          <span className="text-stone-300 text-[9px] uppercase font-black tracking-widest italic">Nema ograničenja</span>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                  {allSpecs.map((spec, idx) => (
-                    <tr key={spec} className={`${idx % 2 === 0 ? "bg-stone-50/20" : "bg-white"} hover:bg-stone-50 transition-colors group`}>
-                      <td className="p-8 font-black text-[var(--color-forest-950)] uppercase tracking-widest text-[10px] border-b border-stone-100 border-r border-stone-100 group-hover:text-[var(--color-copper-500)] transition-colors">{spec}</td>
-                      {items.map(item => (
-                        <td key={item.id} className="p-8 text-xs font-bold text-stone-500 border-b border-stone-100 border-r border-stone-100 last:border-r-0 italic">
-                          {item.specs[spec] || "-"}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </Container>
     </div>
   );
 }
-

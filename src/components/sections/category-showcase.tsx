@@ -1,150 +1,94 @@
-import React from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/layout/container";
 import { categories } from "@/data/categories";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Box } from "lucide-react";
+import { products } from "@/data/products";
+
+const featuredCategorySlugs = [
+  "oruzje",
+  "streljivo",
+  "optike",
+  "odjeca",
+  "obuca",
+  "oprema",
+  "svjetiljke",
+  "ruksaci-torbe",
+];
 
 export function CategoryShowcase() {
+  const featuredCategories = featuredCategorySlugs
+    .map((slug) => categories.find((category) => category.slug === slug))
+    .filter(Boolean);
+
   return (
-    <section className="py-24 bg-white relative overflow-hidden bg-texture">
+    <section className="bg-[var(--color-stone-50)] py-20 md:py-24">
       <Container>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-px w-8 bg-[var(--color-copper-500)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-copper-500)]">Kolekcije</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black text-[var(--color-forest-950)] uppercase italic tracking-tight">
-              Istražite <span className="text-[var(--color-copper-500)]">Svijet</span> Lova
+            <h2 className="text-4xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)] md:text-5xl">
+              Kategorije za ozbiljan teren.
             </h2>
-            <p className="mt-4 text-stone-500 font-medium leading-relaxed">
-              Od vrhunskog oružja i precizne optike do izdržljive odjeće i obuće. 
-              Naš asortiman je pažljivo biran za najzahtjevnije korisnike.
+            <p className="mt-4 text-sm font-medium leading-relaxed text-stone-500">
+              Brz ulaz u asortiman, uz jasnu razliku između standardne opreme i proizvoda koji
+              zahtijevaju provjeru uvjeta kupnje.
             </p>
           </div>
-          <Link href="/shop" className="group flex items-center gap-3 text-sm font-black uppercase tracking-widest text-[var(--color-forest-950)] hover:text-[var(--color-copper-500)] transition-colors">
-            Prikaži sve kategorije
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <Link
+            href="/shop"
+            className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-widest text-[var(--color-forest-950)] transition-colors hover:text-[var(--color-copper-500)]"
+          >
+            Svi proizvodi <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[700px]">
-          {/* Big Card - Oružje */}
-          {categories.find(c => c.slug === 'oruzje') && (
-            <Link 
-              href="/categories/oruzje"
-              className="md:col-span-8 group relative overflow-hidden rounded-[var(--radius-2xl)] flex flex-col justify-end p-10 shadow-2xl shadow-forest-950/10"
-            >
-              <div className="absolute inset-0 transition-all duration-1000 group-hover:scale-105 group-hover:rotate-1">
-                <img 
-                  src={categories.find(c => c.slug === 'oruzje')?.image} 
-                  alt="Oružje"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)] via-[var(--color-forest-950)]/20 to-transparent" />
-              
-              <div className="relative z-10">
-                <Badge variant="destructive" className="mb-4">Regulirani asortiman</Badge>
-                <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-2">
-                  Oružje & <span className="text-[var(--color-copper-500)]">Sustavi</span>
-                </h3>
-                <p className="text-white/60 max-w-md text-sm font-medium mb-6">
-                  Vrhunski karabini, sačmarice i zračno oružje od renomiranih svjetskih proizvođača.
-                </p>
-                <span className="inline-flex items-center gap-2 text-xs font-black text-white uppercase tracking-widest group-hover:text-[var(--color-copper-500)] transition-colors">
-                  Istraži kategoriju <ArrowRight className="w-4 h-4" />
-                </span>
-              </div>
-            </Link>
-          )}
 
-          {/* Side Card 1 - Odjeća */}
-          {categories.find(c => c.slug === 'odjeca') && (
-            <Link 
-              href="/categories/odjeca"
-              className="md:col-span-4 group relative overflow-hidden rounded-[var(--radius-2xl)] flex flex-col justify-end p-8 shadow-2xl shadow-forest-950/5"
-            >
-              <div className="absolute inset-0 transition-all duration-1000 group-hover:scale-110">
-                <img 
-                  src={categories.find(c => c.slug === 'odjeca')?.image} 
-                  alt="Odjeća"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)] via-[var(--color-forest-950)]/40 to-transparent" />
-              
-              <div className="relative z-10">
-                <h3 className="text-2xl font-black text-white uppercase italic tracking-tight mb-4">
-                  Lovačka <span className="text-[var(--color-copper-500)]">Odjeća</span>
-                </h3>
-                <span className="inline-flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-widest group-hover:text-[var(--color-copper-500)] transition-colors">
-                  Kupi odmah <ArrowRight className="w-4 h-4" />
-                </span>
-              </div>
-            </Link>
-          )}
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {featuredCategories.map((category, index) => {
+            if (!category) return null;
+            const productCount = products.filter((product) => product.categorySlug === category.slug).length;
 
-          {/* Bottom Card 1 - Obuća */}
-          {categories.find(c => c.slug === 'obuca') && (
-            <Link 
-              href="/categories/obuca"
-              className="md:col-span-4 group relative overflow-hidden rounded-[var(--radius-2xl)] flex flex-col justify-end p-8 shadow-2xl shadow-forest-950/5 h-[300px] md:h-full"
-            >
-              <div className="absolute inset-0 transition-all duration-1000 group-hover:scale-110 group-hover:-rotate-1">
-                <img 
-                  src={categories.find(c => c.slug === 'obuca')?.image} 
-                  alt="Obuća"
-                  className="w-full h-full object-cover"
+            return (
+              <Link
+                key={category.slug}
+                href={`/categories/${category.slug}`}
+                className="group relative min-h-[320px] overflow-hidden rounded-[var(--radius-xl)] border border-stone-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-card)]"
+              >
+                <Image
+                  src={category.image ?? "/images/placeholder.png"}
+                  alt={category.name}
+                  fill
+                  sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
+                  className="object-cover opacity-75 transition-transform duration-700 group-hover:scale-105"
                 />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)] via-[var(--color-forest-950)]/40 to-transparent" />
-              
-              <div className="relative z-10">
-                <h3 className="text-2xl font-black text-white uppercase italic tracking-tight mb-4">
-                  Terenska <span className="text-[var(--color-copper-500)]">Obuća</span>
-                </h3>
-                <span className="inline-flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-widest group-hover:text-[var(--color-copper-500)] transition-colors">
-                  Kupi odmah <ArrowRight className="w-4 h-4" />
-                </span>
-              </div>
-            </Link>
-          )}
-
-          {/* Bottom Card 2 - Oprema */}
-          {categories.find(c => c.slug === 'oprema') && (
-            <Link 
-              href="/categories/oprema"
-              className="md:col-span-8 group relative overflow-hidden rounded-[var(--radius-2xl)] flex flex-col justify-end p-8 shadow-2xl shadow-forest-950/5 h-[300px] md:h-full"
-            >
-              <div className="absolute inset-0 transition-all duration-1000 group-hover:scale-105">
-                <img 
-                  src={categories.find(c => c.slug === 'oprema')?.image} 
-                  alt="Oprema"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)] via-[var(--color-forest-950)]/30 to-transparent" />
-              
-              <div className="relative z-10 flex items-center justify-between gap-6">
-                <div>
-                  <h3 className="text-3xl font-black text-white uppercase italic tracking-tight mb-2">
-                    Profesionalna <span className="text-[var(--color-copper-500)]">Oprema</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)] via-[var(--color-forest-950)]/35 to-transparent" />
+                <div className="relative z-10 flex h-full min-h-[272px] flex-col justify-end">
+                  <div className="mb-auto flex items-center justify-between">
+                    <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    {category.isRegulated && (
+                      <Badge variant="destructive" className="gap-1">
+                        <ShieldAlert className="h-3 w-3" />
+                        Provjera
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="mb-3 text-3xl font-black uppercase italic tracking-tight text-white">
+                    {category.name}
                   </h3>
-                  <p className="text-white/60 text-xs font-medium max-w-xs">
-                    Optika, termovizija, noževi i sve što je potrebno za uspješan boravak na terenu.
+                  <p className="mb-5 line-clamp-2 text-sm font-medium leading-relaxed text-white/65">
+                    {category.description}
                   </p>
+                  <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--color-copper-500)]">
+                    {productCount} proizvoda <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
                 </div>
-                <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-[var(--color-copper-500)] group-hover:border-[var(--color-copper-500)] transition-all group-hover:scale-110">
-                  <ArrowRight className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </Link>
-          )}
+              </Link>
+            );
+          })}
         </div>
       </Container>
     </section>
   );
 }
-
