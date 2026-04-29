@@ -17,20 +17,29 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        "mb-8 flex flex-col gap-2",
+        "mb-16 flex flex-col gap-4 relative",
         align === "center" && "items-center text-center",
         className
       )}
       {...props}
     >
-      <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--color-forest-950)]">
+      <div className="flex items-center gap-3">
+        <div className="h-px w-8 bg-[var(--color-copper-500)]" />
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-copper-500)]">
+          Kolekcija
+        </span>
+      </div>
+      
+      <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tight text-[var(--color-forest-950)] leading-[0.9]">
         {title}
       </h2>
+      
       {description && (
-        <p className="text-base text-[var(--color-forest-800)]/80 max-w-2xl">
+        <p className="text-sm font-medium text-stone-400 max-w-2xl leading-relaxed">
           {description}
         </p>
       )}
     </div>
   );
 }
+

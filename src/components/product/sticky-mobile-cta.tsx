@@ -18,8 +18,7 @@ export function StickyMobileCTA({ product, label, action, onAction }: StickyMobi
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show when user scrolls down 400px
-      setIsVisible(window.scrollY > 600);
+      setIsVisible(window.scrollY > 800);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -30,24 +29,27 @@ export function StickyMobileCTA({ product, label, action, onAction }: StickyMobi
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ y: 100 }}
+          initial={{ y: 120 }}
           animate={{ y: 0 }}
-          exit={{ y: 100 }}
-          className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/90 backdrop-blur-md border-t border-stone-200 md:hidden shadow-[0_-10px_30px_rgba(0,0,0,0.1)]"
+          exit={{ y: 120 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className="fixed bottom-6 inset-x-4 z-50 p-4 bg-[var(--color-forest-950)]/90 backdrop-blur-xl border border-white/10 md:hidden rounded-[var(--radius-3xl)] shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-texture"
         >
           <div className="flex items-center gap-4 max-w-lg mx-auto">
             <div className="flex-1 min-w-0">
-              <h4 className="text-xs font-bold text-stone-500 uppercase tracking-wider truncate">
-                {product.name}
+              <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] truncate mb-0.5">
+                {product.brand}
               </h4>
-              <p className="text-lg font-bold text-[var(--color-forest-950)]">
+              <p className="text-sm font-black text-white italic uppercase tracking-tight truncate">
+                {product.name}
+              </p>
+              <p className="text-xs font-bold text-[var(--color-copper-500)]">
                 {formatPrice(product.price)}
               </p>
             </div>
             <Button 
-              size="default" 
-              className="px-6 h-12 whitespace-nowrap shadow-md"
-              variant={action === "add-to-cart" ? "default" : "regulated"}
+              size="sm" 
+              className="h-12 px-6 rounded-2xl bg-[var(--color-copper-500)] hover:bg-[var(--color-copper-600)] text-white text-[10px] font-black uppercase tracking-[0.1em] border-none"
               onClick={onAction}
             >
               {label}
@@ -58,3 +60,4 @@ export function StickyMobileCTA({ product, label, action, onAction }: StickyMobi
     </AnimatePresence>
   );
 }
+
